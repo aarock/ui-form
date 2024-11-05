@@ -1,0 +1,29 @@
+{
+  "name": "@aarock/ui-form",
+  "version": "1.0.0",
+  "author": "Aaron Gale",
+  "license": "ISC",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "module:jsx": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@aarock/ui-core": "*",
+    "@hookform/resolvers": "^3.9.0",
+    "graphql": "^16.9.0",
+    "react-hook-form": "^7.52",
+    "urql": "^4.1.0"
+  },
+  "peerDependencies": {
+    "react": "*"
+  }
+}
