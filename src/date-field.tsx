@@ -1,6 +1,6 @@
 import { default as dayjs } from "dayjs"
 import { Blur, Box, Button, ButtonProps, Floating } from "@aarock/ui-core"
-import { Calendar } from "@aarock/ui-kit"
+import { Calendar } from "./calendar.js"
 
 export type DateFieldProps = ButtonProps & {
     icon?: string

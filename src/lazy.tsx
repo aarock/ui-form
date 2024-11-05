@@ -16,7 +16,7 @@ export type LazyProps<T extends FieldValues,Q,QV extends AnyVariables> = {
   render?: (
     field: LazyRenderProps<T>,
     fieldState: ControllerFieldState,
-    formState: UseFormStateReturn<T>,
+    formState: UseFormStateReturn<FieldValues>,
   ) => ReactNode
 }
 
@@ -49,7 +49,7 @@ export function Lazy<T extends FieldValues,Q,QV extends AnyVariables> ({
   return <Controller
     name={ scope(scopePath) }
     control={ form.control }
-    defaultValue={ defaultValue }
+    defaultValue={ defaultValue as T }
     // rules={{ required: isRequired }}
     render={ ({ field, fieldState, formState }) => <Scope path={ scopePath }>
       <LazyChildren value={ value } field={ field }>{
@@ -67,7 +67,7 @@ export function Lazy<T extends FieldValues,Q,QV extends AnyVariables> ({
 type LazyChildrenProps<T extends FieldValues> = {
   value: T,
   field: ControllerRenderProps<T>
-  children: ReactNode
+  children?: ReactNode
 }
 
 function LazyChildren<T extends FieldValues>( { value, field, children } : LazyChildrenProps<T> ) {
