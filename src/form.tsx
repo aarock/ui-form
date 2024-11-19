@@ -1,6 +1,6 @@
 import type { AnyVariables, UseQueryExecute, UseQueryResponse, UseMutationResponse, OperationResult } from "urql"
 import { useForm as useFormBase, FieldValues, UseFormReturn, DefaultValues } from "react-hook-form"
-import { ReactNode, createContext, useCallback, useContext, useMemo } from "react"
+import { ReactNode, createContext, useCallback, useContext } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Schema } from "zod"
 
@@ -64,13 +64,15 @@ export function Form<
   additionalTypenames = []
 }: FormProps<T,Q,QV,M,MV> ) {
 
-    const [ , save ] = mutation
-    const [ { data, fetching, error }, refetch ] = query
-    const value = isNew ? defaultValue as T : data ? valueAccess( data ) : undefined
+  
+  const [ , save ] = mutation
+  const [ { data, fetching, error }, refetch ] = query
+  const value = isNew ? defaultValue as T : data ? valueAccess( data ) : undefined
+  
+  const resolver = schema ? zodResolver( schema ) : undefined
+  const form = useFormBase<T>( { resolver, defaultValues: defaultValue, values: value } )
 
-    const resolver = schema ? zodResolver( schema ) : undefined
-    const form = useFormBase<T>( { resolver, defaultValues: defaultValue, values: value } )
-    const watched = form.watch()
+  const watched = form.watch()
 
     const onBaseSubmit = useCallback((input: T) => {
       return save({ input } as unknown as MV, { additionalTypenames }).then( (result: ExtendedOperationResult<M, MV> & { errors?:Error[] }) => {

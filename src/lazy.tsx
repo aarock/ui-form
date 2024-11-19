@@ -72,7 +72,7 @@ type LazyChildrenProps<T extends FieldValues> = {
 
 function LazyChildren<T extends FieldValues>( { value, field, children } : LazyChildrenProps<T> ) {
 
-  const valueRef = useRef(value)
+  const valueRef = useRef( value || null)
   const [ lazyValue, setValue ] = useState<T>()
 
   useEffect( () => {

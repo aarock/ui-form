@@ -22,12 +22,14 @@
     "@aarock/ui-core": "*",
     "@hookform/resolvers": "^3.9",
     "crypto-js": "^4.2",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11",
     "graphql": "^16.9",
     "react-hook-form": "^7.52",
-    "urql": "^4.1"
+    "urql": "^4.2",
+    "zod": "^3.23"
   },
   "peerDependencies": {
     "react": "*"
   }
 }
+

@@ -6,6 +6,8 @@ import { YStack, type YStackProps, Text } from "@aarock/ui-core"
 import useUploads from "./use-uploads.js"
 
 export { default as Upload } from "./upload.class.js"
+export type UploaderResultAccess<M,MV extends AnyVariables> = PresignedResultAccess<OperationResult<M,MV>>
+export type UploaderVariableAccess<MV extends AnyVariables> = PresignedVariableAccess<MV>
 export type PresignOptions<MV extends AnyVariables> = Omit<UseQueryArgs<MV>,"query">
 export type UploaderProps<M,MV extends AnyVariables> = YStackProps & {
 
@@ -35,7 +37,7 @@ export function Uploader<M,MV extends AnyVariables> ( {
     chunkFile,
     onComplete,
     dropZoneProps,
-    // fileProps,
+    fileProps,
     render,
     ...props
 }: UploaderProps<M,MV> ) {
