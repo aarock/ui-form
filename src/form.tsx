@@ -63,11 +63,11 @@ export function Form<
   defaultValue = {} as DefaultValues<T>,
   additionalTypenames = []
 }: FormProps<T,Q,QV,M,MV> ) {
-
   
   const [ , save ] = mutation
   const [ { data, fetching, error }, refetch ] = query
-  const value = isNew ? defaultValue as T : data ? valueAccess( data ) : undefined
+  const original = data ? valueAccess( data ) : undefined
+  const value = isNew ? defaultValue as T : original
   
   const resolver = schema ? zodResolver( schema ) : undefined
   const form = useFormBase<T>( { resolver, defaultValues: defaultValue, values: value } )

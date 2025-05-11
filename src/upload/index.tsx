@@ -23,7 +23,6 @@ export type UploaderProps<M,MV extends AnyVariables> = YStackProps & {
     // fileProps?: Partial<Omit<UploadFileProps, "upload" | "onDismiss" | "onComplete">>
 
     maxFiles?: number
-    isMultiple?: boolean
     render?: (uploads:Upload[]) => ReactNode
 }
 

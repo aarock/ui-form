@@ -15,7 +15,6 @@ export type UploaderProps<M, MV extends AnyVariables> = YStackProps & {
     onComplete?: (upload: Upload) => void;
     dropZoneProps?: Partial<Omit<UploadDropZoneProps, "onFiles">>;
     maxFiles?: number;
-    isMultiple?: boolean;
     render?: (uploads: Upload[]) => ReactNode;
 };
 export declare function Uploader<M, MV extends AnyVariables>({ types, maxFiles, usePresignMutation, variableAccess, resultAccess, chunkSize, chunkFile, onComplete, dropZoneProps, render, ...props }: UploaderProps<M, MV>): any;

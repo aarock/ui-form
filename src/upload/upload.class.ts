@@ -104,7 +104,7 @@ export default class Upload {
         console.log("PRESIGNED",res)
         if ( !res || !res.key || !res.uploadUrls.length ) throw new PresignAccessError()
         const { key, uploadUrls, abortUrl, completeUrl, privateUrl, publicUrl } = res
-        const keyParts = key?.split( "/" ) || ""
+        const keyParts = key?.split( "/" ) || [ "" ]
         this.isReady = true
         this.id = key
         this.key = key
@@ -166,6 +166,10 @@ export default class Upload {
             .catch( err => { throw new UploadAbortFailedError( err.message ) } )
             .catch( this.triggerError )
     }
+    
+    public dismiss = async () => {
+        this.triggerDismiss()
+    }
 
     private async complete () {
         if ( !this.completeUrl ) return Promise.resolve( this.triggerComplete() )
@@ -210,6 +214,12 @@ export default class Upload {
         this.isPending = true
         this.isAborted = true
         if ( this.abortCB ) this.abortCB?.()
+    }
+    
+    private dismissCB?: () => void
+    public onDismiss = ( cb?: () => void ) => { this.dismissCB = cb }
+    private triggerDismiss = () => {
+        if ( this.isComplete && this.dismissCB ) this.dismissCB?.()
     }
 
     private completeCB?: ( upload: Upload ) => void

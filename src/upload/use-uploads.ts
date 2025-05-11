@@ -22,6 +22,7 @@ export default function useUploads (
         const set = next.slice( 0, limit )
         uploads.forEach(upload => {
             upload.onAbort( () => setUploads( uploads => uploads.filter( u => u !== upload ) ) )
+            upload.onDismiss( () => setDismissed( dismissed => [ ...dismissed, upload ] ) )
             upload.onComplete( () => options?.onComplete?.( upload ) )
         })
         set.forEach( upload => {
