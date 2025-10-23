@@ -2,7 +2,7 @@ import type { AnyVariables, UseQueryExecute, UseQueryResponse, UseMutationRespon
 import { useForm as useFormBase, FieldValues, UseFormReturn, DefaultValues } from "react-hook-form"
 import { ReactNode, createContext, useCallback, useContext } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Schema } from "zod"
+import { ZodType as Schema } from "zod"
 
 
 export type FormContext<T extends FieldValues> = UseFormReturn<T>
@@ -69,7 +69,7 @@ export function Form<
   const original = data ? valueAccess( data ) : undefined
   const value = isNew ? defaultValue as T : original
   
-  const resolver = schema ? zodResolver( schema ) : undefined
+  const resolver = schema ? zodResolver( schema as any ) : undefined
   const form = useFormBase<T>( { resolver, defaultValues: defaultValue, values: value } )
 
   const watched = form.watch()
