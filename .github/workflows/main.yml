@@ -1,4 +1,4 @@
-name: Publish package to GitHub Packages
+name: Publish package
 on:
   push:
     tags:
@@ -11,7 +11,6 @@ jobs:
       packages: write
     env:
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

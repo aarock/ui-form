@@ -95,11 +95,9 @@ export default class Upload {
           this.blobs.push( blob )
           this.eTags.push( eTag )
       }
-
       
       return this.presignFile( this.file, this.eTags ).then( res => {
-          console.log("PRESIGNED", res )
-        if ( !res?.uploadUrls.length ) throw new PresignAccessError()
+        if ( !res?.uploadUrls?.length ) throw new PresignAccessError()
         const { id, path, uploadUrls, abortUrl, completeUrl, privateUrl, publicUrl } = res
         this.isReady = true
         this.id = id || path

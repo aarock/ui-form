@@ -19,6 +19,10 @@
   "scripts": {
     "build": "tsc"
   },
+  "peerDependencies": {
+    "@aarock/ui-core": "*",
+    "react": "*"
+  },
   "dependencies": {
     "@tanstack/react-form": "^1",
     "crypto-js": "^4",
@@ -27,8 +31,7 @@
     "urql": "^5",
     "zod": "^4"
   },
-  "peerDependencies": {
-    "@aarock/ui-core": "*",
-    "react": "*"
+  "devDependencies": {
+    "@types/react": "^19"
   }
 }
