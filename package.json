@@ -1,6 +1,7 @@
 {
+  "repository": "https://github.com/aarock/ui-form",
   "name": "@aarock/ui-form",
-  "version": "1.1.0",
+  "version": "1.0.4",
   "author": "Aaron Gale",
   "license": "ISC",
   "type": "module",
