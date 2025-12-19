@@ -1,6 +1,7 @@
 // import upload, { ChunkProgressCallback, UploadResult } from "./upload"
 
-import { DragEvent, MouseEvent, useCallback, useState } from "react"
+import { DragEvent, useCallback, useState } from "react"
+
 import {
   Button, type ButtonProps,
   YStack, type YStackProps,
@@ -70,7 +71,7 @@ export default function UploadDropZone ( {
           <Button.Icon name="upload" />
           <Button.Label children="Choose a file" />
         </Button>
-        <Text p="$sm" color="$neutral10" children="Or drag and drop to upload..." { ...messageProps } />
+        <Text padding="$sm" color="$neutral10" children="Or drag and drop to upload..." { ...messageProps } />
     </YStack>
 }
 

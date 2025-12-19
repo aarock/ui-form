@@ -1,105 +1,118 @@
-import type { AnyVariables, UseQueryExecute, UseQueryResponse, UseMutationResponse, OperationResult } from "urql"
-import { useForm as useFormBase, FieldValues, UseFormReturn, DefaultValues } from "react-hook-form"
-import { ReactNode, createContext, useCallback, useContext } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { ZodType as Schema } from "zod"
+import { createFormHookContexts, createFormHook, useStore, revalidateLogic, type AnyFormApi } from '@tanstack/react-form'
+import { useContext, type ReactNode } from 'react'
+import { useScope } from "./scope.js"
+import { type ZodType } from "zod"
 
+const { fieldContext, formContext, useFormContext } = createFormHookContexts()
+const { useAppForm } = createFormHook( { fieldContext, formContext, fieldComponents: {}, formComponents: {} } )
 
-export type FormContext<T extends FieldValues> = UseFormReturn<T>
-const Context = createContext<FormContext<any>|undefined>( undefined )
-export function useForm () { return useContext( Context ) }
-
-export type FormProps<
-  T extends FieldValues,
-  Q, QV extends AnyVariables,
-  M, MV extends AnyVariables,
-> = {
-  // useQuery: ( options: Omit<UseQueryArgs<QV>,"query"> ) => UseQueryResponse<Q,QV>
-  // variables: UseQueryArgs<QV>
-  query: UseQueryResponse<Q,QV>
-  mutation: UseMutationResponse<M,MV>
-  valueAccess: ( res: Q ) => T,
-  eventAccess: ( res: M ) => Event,
-  schema?: Schema
-  isNew?: boolean
-  additionalTypenames?: string[],
-  defaultValue?: DefaultValues<T>
-  onError?: (error:Error) => void
-  onComplete?: (input:T, event:Event, original: T ) => void
-  render?: (value:T, props:FormRenderProps<T> ) => ReactNode
+export type Meta = {
+  isDirty: boolean,
+  isPristine: boolean,
+  isTouched: boolean,
+  isBlurred: boolean,
+  isValid: boolean,
+  isValidating: boolean,
+  isSubmitted: boolean,
+  isSubmitting: boolean,
 }
 
-export type Event = {
-  id?: string;
-  sourceId?: string;
-  sourceDiff?: any;
-  isDraft?: boolean;
-  isPending?: boolean;
-  isUndone?: boolean;
+export type Selector<T, SelectorResult> = ( state: T, meta: Meta ) => SelectorResult
+
+export type FieldRenderProps<T> = { value: T, onValueChange: ( value: T ) => void }
+
+export type FieldRenderEntry<T extends any[] | null | undefined> = NonNullable<T>[ number ]
+
+export type FieldRenderUtils<T> = {
+  get: ( name: string ) => unknown,
+  set: ( name: string, value: unknown ) => void
+  insert: ( value: T extends Array<any> ? T[ number ] : never, index?: number ) => void
+  remove: ( i: number ) => void
+  reorder: ( from: number, to: number ) => void
 }
 
-export type ExtendedOperationResult<M, MV extends AnyVariables> = OperationResult<M, MV> & { errors?:Error[] }
-
-export type FormRenderProps<T extends FieldValues> = UseFormReturn<T> & {
-  onReset: () => void
-  onSubmit: () => void
+export type FieldProps<T> = {
+  name: string,
+  defaultValue?: T,
+  render?: (
+    props: FieldRenderProps<T>,
+    utils: FieldRenderUtils<T>
+  ) => ReactNode
 }
 
-export function Form<
-  T extends FieldValues,
-  Q, QV extends AnyVariables,
-  M, MV extends AnyVariables,
-> ( {
-  query,
-  mutation,
-  valueAccess,
-  eventAccess,
-  schema,
+export function useForm<T> (
+  defaultValue?: T,
+  schema?: ZodType<any>,
+  onSubmit?: ( input: T ) => void,
+  onInvalid?: ( input: T ) => void,
+) {
+  const appForm = useAppForm( {
+    defaultValues: defaultValue,
+    validators: { onDynamic: schema as any },
+    validationLogic: revalidateLogic(),
+    onSubmit: ( { value } ) => onSubmit?.( schema?.parse( value ) || value ),
+    onSubmitInvalid: ( { value } ) => onInvalid?.( value ),
+  } )
 
-  isNew,
-  onError,
-  onComplete,
-  render,
-  defaultValue = {} as DefaultValues<T>,
-  additionalTypenames = []
-}: FormProps<T,Q,QV,M,MV> ) {
-  
-  const [ , save ] = mutation
-  const [ { data, fetching, error }, refetch ] = query
-  const original = data ? valueAccess( data ) : undefined
-  const value = isNew ? defaultValue as T : original
-  
-  const resolver = schema ? zodResolver( schema as any ) : undefined
-  const form = useFormBase<T>( { resolver, defaultValues: defaultValue, values: value } )
-
-  const watched = form.watch()
-
-    const onBaseSubmit = useCallback((input: T) => {
-      return save({ input } as unknown as MV, { additionalTypenames }).then( (result: ExtendedOperationResult<M, MV> & { errors?:Error[] }) => {
-          const data = result.data
-          const errors = result.error ? [result.error] : result.errors || []
-          errors?.forEach( ({ name = "Error", message }) => {
-            const error = new Error(message)
-            error.name = name
-            throw error
-          } )
-          if( data ) onComplete?.( input, eventAccess(data), value || defaultValue as T )
-        } )
-        .catch( onError )
-    }, [ value ] )
-
-    const onSubmit = useCallback( () => form.handleSubmit( onBaseSubmit, console.warn )(), [ onBaseSubmit ] )
-    const onReset = useCallback( () => form.reset(), [] )
-
-    if( !value ) return <></>
-
-    return <Context.Provider value={ form }>
-      <form style={ { display: "flex", flexGrow: 1 } }
-      onError={ console.warn }
-      onSubmit={ event =>{
-        event.preventDefault()
-        event.stopPropagation()
-        onSubmit()
-      } } >{ render?.( watched, { ...form, onSubmit, onReset } ) }</form>
-    </Context.Provider>
+  return [ appForm, formContext.Provider ] as const
 }
+
+export function useField<T, S> ( selector: Selector<T, S>, form?: AnyFormApi ): ReturnType<Selector<T, S>> {
+  const { path } = useScope()
+  const contextForm = useContext( formContext )
+  const manualForm = form || contextForm
+  if ( !manualForm?.store ) throw new Error( "useField must be called within a FormProvider or be passed a form as the second parameter." )
+  return useStore( manualForm.store, state => selector( stateValueByDeepKey( state, path ), simplifyState( state ) as Meta ) )
+}
+
+export function useMeta ( form?: AnyFormApi ): Meta {
+  const contextForm = useContext( formContext )
+  const manualForm = form || contextForm
+  if ( !manualForm?.store ) throw new Error( "useMeta must be called within a FormProvider or be passed a form as the second parameter." )
+  return useStore( manualForm.store, state => simplifyState( state ) as Meta )
+}
+
+export function Field<T> ( { name, defaultValue, render }: FieldProps<T> ) {
+  const { scope } = useScope()
+  const form = useFormContext()
+  return <form.Field 
+    name={ scope( name as string ) as never } 
+    defaultValue={ defaultValue as never }
+    >{ field => {
+    const value = field.state.value as T
+    const valueArray = ( value || [] ) as any[]
+    const lastIndex = Array.isArray( valueArray ) ? valueArray.length : 0
+    return render?.( { value: value, onValueChange: val => field.handleChange( val as any ) }, {
+      get: ( name ) => form.getFieldValue( scope( name as string ) as never ),
+      set: ( name, value ) => form.setFieldValue( scope( name as string ) as never, value as any ),
+      remove: ( index: number ) => { field.handleChange( valueArray?.toSpliced?.( index, 1 ) as never ) },
+      insert: ( value: T, index: number = lastIndex ) => {
+        console.log( value, lastIndex, valueArray, valueArray?.toSpliced?.( index, 0, value ) )
+        field.handleChange( valueArray?.toSpliced?.( index, 0, value ) as never )
+      },
+      reorder: ( from: number, to: number ) => { field.handleChange( valueArray?.toSpliced?.( to, 0, valueArray?.splice?.( from, 1 ) ) as never ) },
+    } )
+  } }</form.Field>
+}
+
+function stateValueByDeepKey ( state: any, deepKey?: string ) {
+  return ( deepKey || "" )?.split( "." )
+    .reduce( ( acc, key ) =>
+      acc?.[ key ] ?? acc as any,
+      state?.values as any
+    )
+}
+
+function simplifyState ( state: any ): Meta {
+  return {
+    isDirty: !state.isDefaultValue,
+    isPristine: state.isPristine,
+    isTouched: state.isTouched,
+    isBlurred: state.isBlurred,
+    isValid: state.isValid,
+    isValidating: state.isValidating,
+    isSubmitted: state.isSubmitted,
+    isSubmitting: state.isSubmitting,
+  }
+}
+

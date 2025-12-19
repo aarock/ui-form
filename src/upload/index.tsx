@@ -36,7 +36,7 @@ export function Uploader<M,MV extends AnyVariables> ( {
     chunkFile,
     onComplete,
     dropZoneProps,
-    fileProps,
+    // fileProps,
     render,
     ...props
 }: UploaderProps<M,MV> ) {
@@ -49,14 +49,15 @@ export function Uploader<M,MV extends AnyVariables> ( {
       { chunkSize, chunkFile, onComplete, onError: setUploaderError }
     )
 
-    return <><YStack
+    return <YStack {...props}>
+      <YStack
         borderWidth={2}
         borderStyle="dashed"
         borderColor="$neutral5"
         borderRadius="$lg"
         overflow="hidden"
         padding="$sm"
-        {...props}>
+        >
 
       {/*<Reveal>*/}
         { uploads.length < maxFiles && <UploadDropZone
@@ -74,38 +75,5 @@ export function Uploader<M,MV extends AnyVariables> ( {
 
     </YStack>
     { !!uploaderError && <Text color="$danger9">{ uploaderError.message }</Text> }
-    </>
+    </YStack>
 }
-
-// type CollapsableStackProps<T> = {
-//     data?: T[]
-//     keys?: ( item: T ) => number | string
-//     renderItem?: ( item: T, index: number ) => ReactNode
-// }
-
-// function CollapsableStack<T> ( { data = [], keys, renderItem }: CollapsableStackProps<T> ) {
-
-//     const transitions = useTransition( data, {
-//         delay: 600,
-//         from: { x: 0 },
-//         enter: { x: 1 },
-//         leave: { x: 0 },
-//         config: config.stiff,
-//         keys,
-//     } )
-
-//     return transitions( ( _springs, item, transition, index ) => {
-//         return <CollapsableStackItem
-//             item={ item }
-//             data={ data }
-//             key={ transition.key }
-//             isOpen={ data.includes( item ) ? true : false }
-//             children={ renderItem?.( item, index ) || null }
-//             duration={ 2000 }
-//         />
-//     } )
-// }
-
-// const CollapsableStackItem = memo( ( props: any ) => {
-//     return <Reveal { ...props } />
-// } )

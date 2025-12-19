@@ -19,16 +19,15 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@aarock/ui-core": "*",
-    "@hookform/resolvers": "^5.0",
-    "crypto-js": "^4.2",
-    "dayjs": "^1.11",
-    "graphql": "^16.9",
-    "react-hook-form": "^7.65",
-    "urql": "^5.0",
-    "zod": "^4.1"
+    "@tanstack/react-form": "^1",
+    "crypto-js": "^4",
+    "dayjs": "^1",
+    "graphql": "^16.12",
+    "urql": "^5",
+    "zod": "^4"
   },
   "peerDependencies": {
+    "@aarock/ui-core": "*",
     "react": "*"
   }
 }

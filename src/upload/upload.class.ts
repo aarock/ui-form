@@ -10,7 +10,7 @@ export const DEFAULT_RETRY_INTERVAL = 1000
 export const DEFAULT_VARIABLE_ACCESS: PresignedVariableAccess<any> = ( file, eTags ) => ( { name: file.name, parts: eTags.length } )
 export const DEFAULT_RESULT_ACCESS: PresignedResultAccess<any> = ( data ) => {
     if ( !!data.data ) for ( let key in data.data ) {
-        if ( data.data[ key ][ 'key' ] ) return data.data[ key ]
+        if ( data.data[ key ][ 'path' ] ) return data.data[ key ]
     }
     return data
 }
@@ -28,7 +28,8 @@ export type ChunkFile = ( file: File | Blob, pos: number, len: number, end: numb
 export type CalculateETag = ( blob: Blob ) => Promise<string>
 
 export type PresignResult = {
-    key: string
+    id: string | null
+    path: string
     uploadUrls: string[]
     publicUrl: string
     privateUrl: string
@@ -38,14 +39,11 @@ export type PresignResult = {
 
 export default class Upload {
 
+    public id: string = ""
+    public path: string = ""
     public name: string = ""
     public size: number = 0
     public type: string = ""
-
-    public id: string = ""
-    public key: string = ""
-    public keyPath: string = ""
-    public keyName: string = ""
 
     public uploadUrls: string[] = []
     public completeUrl?: string
@@ -98,18 +96,14 @@ export default class Upload {
           this.eTags.push( eTag )
       }
 
-      console.log("PRESIGN", this, this.presignFile )
-
+      
       return this.presignFile( this.file, this.eTags ).then( res => {
-        console.log("PRESIGNED",res)
-        if ( !res || !res.key || !res.uploadUrls.length ) throw new PresignAccessError()
-        const { key, uploadUrls, abortUrl, completeUrl, privateUrl, publicUrl } = res
-        const keyParts = key?.split( "/" ) || [ "" ]
+          console.log("PRESIGNED", res )
+        if ( !res?.uploadUrls.length ) throw new PresignAccessError()
+        const { id, path, uploadUrls, abortUrl, completeUrl, privateUrl, publicUrl } = res
         this.isReady = true
-        this.id = key
-        this.key = key
-        this.keyPath = keyParts.length > 1 ? keyParts.slice( 0, -1 ).join( "/" ) : ""
-        this.keyName = keyParts.pop() || key || ""
+        this.id = id || path
+        this.path = path
         this.uploadUrls = uploadUrls
         this.publicUrl = publicUrl
         this.privateUrl = privateUrl
@@ -124,11 +118,9 @@ export default class Upload {
     }
 
     public send = async () => {
-
         if ( this.isPending ) this.triggerResume()
         else this.isPending = true
         this.chunks.forEach( chunk => {
-
             if ( !!chunk.isComplete ) return Promise.resolve()
             this.queue.enqueue( async () => {
                 if ( this.isAborted ) throw new UploadAbortedError()
@@ -141,7 +133,6 @@ export default class Upload {
                     throw err
                 } )
             } )
-
         } )
 
         return this.queue.dequeue()
@@ -289,28 +280,3 @@ export class Chunk {
     }
 
 }
-
-// export interface IUpload {
-//     name: string
-//     size: number
-//     type: string
-
-//     id: string
-//     key: string
-//     keyPath: string
-//     keyName: string
-//     abortUrl: string
-//     completeUrl: string
-//     publicUrl: string
-//     privateUrl: string
-//     uploadUrls: string[]
-
-//     isReady: boolean
-//     isPaused: boolean
-//     isComplete: boolean
-//     isPending: boolean
-//     isAborted: boolean
-
-//     progress: number
-//     error?: Error
-// }
