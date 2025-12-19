@@ -1,10 +1,11 @@
-import { createFormHookContexts, createFormHook, useStore, revalidateLogic, type AnyFormApi } from '@tanstack/react-form'
+import { createFormHookContexts, createFormHook, useStore, revalidateLogic, type AnyFormApi, UpdateMetaOptions } from '@tanstack/react-form'
 import { useContext, type ReactNode } from 'react'
 import { useScope } from "./scope.js"
-import { type ZodType } from "zod"
+import { type ZodType } from "zod/v3"
 
-const { fieldContext, formContext, useFormContext } = createFormHookContexts()
+const { fieldContext, formContext, useFormContext: _useFormContext } = createFormHookContexts()
 const { useAppForm } = createFormHook( { fieldContext, formContext, fieldComponents: {}, formComponents: {} } )
+export const useFormContext = _useFormContext
 
 export type Meta = {
   isDirty: boolean,
@@ -25,7 +26,7 @@ export type FieldRenderEntry<T extends any[] | null | undefined> = NonNullable<T
 
 export type FieldRenderUtils<T> = {
   get: ( name: string ) => unknown,
-  set: ( name: string, value: unknown ) => void
+  set: ( name: string, value: unknown, opts?: UpdateMetaOptions ) => void
   insert: ( value: T extends Array<any> ? T[ number ] : never, index?: number ) => void
   remove: ( i: number ) => void
   reorder: ( from: number, to: number ) => void
@@ -46,6 +47,7 @@ export function useForm<T> (
   onSubmit?: ( input: T ) => void,
   onInvalid?: ( input: T ) => void,
 ) {
+
   const appForm = useAppForm( {
     defaultValues: defaultValue,
     validators: { onDynamic: schema as any },
@@ -53,7 +55,6 @@ export function useForm<T> (
     onSubmit: ( { value } ) => onSubmit?.( schema?.parse( value ) || value ),
     onSubmitInvalid: ( { value } ) => onInvalid?.( value ),
   } )
-
   return [ appForm, formContext.Provider ] as const
 }
 
@@ -75,16 +76,16 @@ export function useMeta ( form?: AnyFormApi ): Meta {
 export function Field<T> ( { name, defaultValue, render }: FieldProps<T> ) {
   const { scope } = useScope()
   const form = useFormContext()
-  return <form.Field 
-    name={ scope( name as string ) as never } 
+  return <form.Field
+    name={ scope( name as string ) as never }
     defaultValue={ defaultValue as never }
-    >{ field => {
+  >{ field => {
     const value = field.state.value as T
     const valueArray = ( value || [] ) as any[]
     const lastIndex = Array.isArray( valueArray ) ? valueArray.length : 0
     return render?.( { value: value, onValueChange: val => field.handleChange( val as any ) }, {
       get: ( name ) => form.getFieldValue( scope( name as string ) as never ),
-      set: ( name, value ) => form.setFieldValue( scope( name as string ) as never, value as any ),
+      set: ( name, value, opts ) => form.setFieldValue( scope( name as string ) as never, value as any, opts ),
       remove: ( index: number ) => { field.handleChange( valueArray?.toSpliced?.( index, 1 ) as never ) },
       insert: ( value: T, index: number = lastIndex ) => {
         console.log( value, lastIndex, valueArray, valueArray?.toSpliced?.( index, 0, value ) )
