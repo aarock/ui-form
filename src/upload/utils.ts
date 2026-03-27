@@ -53,7 +53,7 @@ export async function wait ( ms: number ) {
 export async function retry<T> ( fn: FunctionReturningPromise<T>, delay: number, retries: number, onRetry?: ( i: number ) => void ): Promise<T> {
     return new Promise( ( res, rej ) => {
         return fn().then( res ).catch( err => {
-            if ( err.name === "RetryAbortError" ) return rej( err )
+            if ( err.name === "RetryAbortedError" ) return rej( err )
             if ( retries < 1 ) return rej( err )
             onRetry?.( retries )
             return wait( delay )

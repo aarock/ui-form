@@ -81,18 +81,24 @@ async function pick ( types?: string[] ): Promise<File[]> {
     } )
 }
 
-function getDocumentAsync ( accept?:string ): Promise<FileList | void> {
+function getDocumentAsync ( accept?: string ): Promise<FileList | void> {
 
-    var input = document?.createElement( 'input' )
-    if (accept) input.accept = accept
+    const input = document?.createElement( 'input' )
+    if ( accept ) input.accept = accept
     input.type = 'file'
     input.multiple = true
+    input.style.display = 'none'
+    document.body.appendChild( input )
 
     return new Promise<FileList>( ( res, rej ) => {
-        input.onchange = () => { res( input.files || new FileList() ) }
-        input.onabort = () => rej( new Error( "Cancelled" ) )
+        const cleanup = () => {
+            if ( input.parentNode ) input.parentNode.removeChild( input )
+        }
+        input.onchange = () => { cleanup(); res( input.files || ([] as unknown as FileList) ) }
+        // @ts-ignore - oncancel is modern but not yet in all TS typings
+        input.oncancel = () => { cleanup(); rej( new Error( "Cancelled" ) ) }
+        input.onabort = () => { cleanup(); rej( new Error( "Cancelled" ) ) }
         input.click()
     } )
-
 
 }

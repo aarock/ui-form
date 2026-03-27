@@ -25,6 +25,7 @@ export type FieldRenderProps<T> = { value: T, onValueChange: ( value: T ) => voi
 export type FieldRenderEntry<T extends any[] | null | undefined> = NonNullable<T>[ number ]
 
 export type FieldRenderUtils<T> = {
+  errors: Error[],
   get: ( name: string ) => unknown,
   set: ( name: string, value: unknown, opts?: UpdateMetaOptions ) => void
   insert: ( value: T extends Array<any> ? T[ number ] : never, index?: number ) => void
@@ -81,9 +82,11 @@ export function Field<T> ( { name, defaultValue, render }: FieldProps<T> ) {
     defaultValue={ defaultValue as never }
   >{ field => {
     const value = field.state.value as T
+    const errors = field.state.meta.errors as Error[]
     const valueArray = ( value || [] ) as any[]
     const lastIndex = Array.isArray( valueArray ) ? valueArray.length : 0
-    return render?.( { value: value, onValueChange: val => field.handleChange( val as any ) }, {
+    return render?.( { value, onValueChange: val => field.handleChange( val as any ) }, {
+      errors,
       get: ( name ) => form.getFieldValue( scope( name as string ) as never ),
       set: ( name, value, opts ) => form.setFieldValue( scope( name as string ) as never, value as any, opts ),
       remove: ( index: number ) => { field.handleChange( valueArray?.toSpliced?.( index, 1 ) as never ) },
@@ -91,7 +94,12 @@ export function Field<T> ( { name, defaultValue, render }: FieldProps<T> ) {
         console.log( value, lastIndex, valueArray, valueArray?.toSpliced?.( index, 0, value ) )
         field.handleChange( valueArray?.toSpliced?.( index, 0, value ) as never )
       },
-      reorder: ( from: number, to: number ) => { field.handleChange( valueArray?.toSpliced?.( to, 0, valueArray?.splice?.( from, 1 ) ) as never ) },
+      reorder: ( from: number, to: number ) => {
+        const arr = [ ...valueArray ]
+        const [ item ] = arr.splice( from, 1 )
+        arr.splice( to, 0, item )
+        field.handleChange( arr as never )
+      },
     } )
   } }</form.Field>
 }
